@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF 解鎖列印工具</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f0f2f5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+  .logo {
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 32px;
+  }
+  .drop-zone {
+    border: 2px dashed #d0d5dd;
+    border-radius: 12px;
+    padding: 32px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 20px;
+    background: #fafafa;
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: #d0021b;
+    background: #fff5f5;
+  }
+  .drop-zone .icon { font-size: 36px; margin-bottom: 8px; }
+  .drop-zone .text { font-size: 15px; color: #555; }
+  .drop-zone .hint { font-size: 13px; color: #aaa; margin-top: 4px; }
+  .file-name {
+    display: none;
+    background: #f0fff4;
+    border: 1px solid #86efac;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: #166534;
+    margin-bottom: 20px;
+    word-break: break-all;
+  }
+  .file-name.show { display: block; }
+  label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+  }
+  input[type="password"] {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 24px;
+  }
+  input[type="password"]:focus {
+    border-color: #d0021b;
+  }
+  button {
+    width: 100%;
+    padding: 13px;
+    background: #d0021b;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  button:hover { background: #b00016; }
+  button:disabled { background: #ccc; cursor: not-allowed; }
+  .status {
+    margin-top: 20px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: none;
+  }
+  .status.show { display: block; }
+  .status.info { background: #eff6ff; color: #1d4ed8; }
+  .status.error { background: #fef2f2; color: #dc2626; }
+  .status.success { background: #f0fdf4; color: #16a34a; }
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 99px;
+    margin-top: 12px;
+    overflow: hidden;
+    display: none;
+  }
+  .progress-bar.show { display: block; }
+  .progress-fill {
+    height: 100%;
+    background: #d0021b;
+    border-radius: 99px;
+    transition: width 0.3s;
+    width: 0%;
+  }
+  .footer {
+    margin-top: 28px;
+    text-align: center;
+    font-size: 12px;
+    color: #bbb;
+  }
+  #fileInput { display: none; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">🔓</div>
+  <h1>PDF 解鎖列印工具</h1>
+  <p class="subtitle">輸入密碼，解除加密限制，輸出可列印 PDF</p>
+
+  <div class="drop-zone" id="dropZone">
+    <div class="icon">📄</div>
+    <div class="text">點擊選擇 PDF，或拖曳至此</div>
+    <div class="hint">支援 AES-256 加密的 PDF</div>
+  </div>
+  <input type="file" id="fileInput" accept=".pdf">
+
+  <div class="file-name" id="fileName"></div>
+
+  <label for="password">PDF 密碼</label>
+  <input type="password" id="password" placeholder="輸入開啟密碼">
+
+  <button id="convertBtn" disabled>轉換並列印</button>
+
+  <div class="status" id="status"></div>
+  <div class="progress-bar" id="progressBar">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <div class="footer">全程在瀏覽器處理，檔案不會上傳至任何伺服器</div>
+</div>
+
+<!-- PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  let selectedFile = null;
+
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const fileNameEl = document.getElementById('fileName');
+  const passwordEl = document.getElementById('password');
+  const convertBtn = document.getElementById('convertBtn');
+  const statusEl = document.getElementById('status');
+  const progressBar = document.getElementById('progressBar');
+  const progressFill = document.getElementById('progressFill');
+
+  dropZone.addEventListener('click', () => fileInput.click());
+
+  dropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+  });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type === 'application/pdf') setFile(file);
+    else showStatus('請選擇 PDF 檔案', 'error');
+  });
+
+  fileInput.addEventListener('change', e => {
+    if (e.target.files[0]) setFile(e.target.files[0]);
+  });
+
+  function setFile(file) {
+    selectedFile = file;
+    fileNameEl.textContent = '✅ ' + file.name;
+    fileNameEl.classList.add('show');
+    convertBtn.disabled = false;
+  }
+
+  function showStatus(msg, type) {
+    statusEl.textContent = msg;
+    statusEl.className = 'status show ' + type;
+  }
+
+  function setProgress(pct) {
+    progressBar.classList.add('show');
+    progressFill.style.width = pct + '%';
+  }
+
+  convertBtn.addEventListener('click', async () => {
+    if (!selectedFile) return;
+
+    const password = passwordEl.value;
+    convertBtn.disabled = true;
+    showStatus('正在開啟 PDF，驗證密碼中…', 'info');
+    setProgress(5);
+
+    try {
+      const arrayBuffer = await selectedFile.arrayBuffer();
+
+      // Open PDF with password
+      const loadingTask = pdfjsLib.getDocument({
+        data: arrayBuffer,
+        password: password,
+      });
+
+      let pdfDoc;
+      try {
+        pdfDoc = await loadingTask.promise;
+      } catch (err) {
+        if (err.name === 'PasswordException') {
+          showStatus('密碼錯誤，請確認後再試', 'error');
+          convertBtn.disabled = false;
+          progressBar.classList.remove('show');
+          return;
+        }
+        throw err;
+      }
+
+      const numPages = pdfDoc.numPages;
+      showStatus(`共 ${numPages} 頁，開始轉換…`, 'info');
+
+      const { jsPDF } = window.jspdf;
+      let pdf = null;
+      const SCALE = 2.0; // 高解析度（150 DPI 效果）
+
+      for (let i = 1; i <= numPages; i++) {
+        setProgress(5 + Math.round((i / numPages) * 90));
+        showStatus(`轉換中… ${i} / ${numPages} 頁`, 'info');
+
+        const page = await pdfDoc.getPage(i);
+        const viewport = page.getViewport({ scale: SCALE });
+
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d');
+
+        await page.render({ canvasContext: ctx, viewport }).promise;
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.92);
+
+        // PDF 頁面尺寸（pt）
+        const ptW = viewport.width / SCALE * 72 / 96;
+        const ptH = viewport.height / SCALE * 72 / 96;
+
+        if (i === 1) {
+          pdf = new jsPDF({
+            orientation: ptW > ptH ? 'landscape' : 'portrait',
+            unit: 'pt',
+            format: [ptW, ptH],
+          });
+        } else {
+          pdf.addPage([ptW, ptH], ptW > ptH ? 'landscape' : 'portrait');
+        }
+
+        pdf.addImage(imgData, 'JPEG', 0, 0, ptW, ptH);
+      }
+
+      setProgress(100);
+
+      // Open print dialog
+      const blobUrl = pdf.output('bloburl');
+      const printWin = window.open(blobUrl);
+      if (printWin) {
+        printWin.onload = () => {
+          printWin.focus();
+          printWin.print();
+        };
+      } else {
+        showStatus('瀏覽器封鎖了彈出視窗，請允許後再試一次', 'error');
+        convertBtn.disabled = false;
+        return;
+      }
+
+      showStatus(`完成！共 ${numPages} 頁，列印視窗已開啟`, 'success');
+
+    } catch (err) {
+      console.error(err);
+      showStatus('轉換失敗：' + err.message, 'error');
+    } finally {
+      convertBtn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
