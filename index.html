@@ -175,7 +175,9 @@
 
 <!-- PDF.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<!-- jsPDF -->
+<!-- pdf-lib（向量輸出，方法 B） -->
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<!-- jsPDF（fallback 點陣，方法 A） -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
@@ -261,48 +263,71 @@
 
       const numPages = pdfDoc.numPages;
       showStatus(`共 ${numPages} 頁，開始轉換…`, 'info');
+      setProgress(20);
 
-      const { jsPDF } = window.jspdf;
-      let pdf = null;
-      const SCALE = 2.0; // 高解析度（150 DPI 效果）
+      let outputBytes = null;
 
-      for (let i = 1; i <= numPages; i++) {
-        setProgress(5 + Math.round((i / numPages) * 90));
-        showStatus(`轉換中… ${i} / ${numPages} 頁`, 'info');
+      // ── 方法 B：pdf-lib 向量輸出（保留字型與圖形，品質最佳）──────────
+      try {
+        const { PDFDocument } = PDFLib;
+        const srcDoc = await PDFDocument.load(arrayBuffer, {
+          password,
+          ignoreEncryption: false,
+        });
+        const newDoc = await PDFDocument.create();
+        const indices = srcDoc.getPageIndices();
+        const copied = await newDoc.copyPages(srcDoc, indices);
+        copied.forEach(p => newDoc.addPage(p));
+        outputBytes = await newDoc.save();
+        setProgress(95);
+        showStatus('向量模式轉換完成，開啟列印…', 'info');
+      } catch (vecErr) {
+        // ── 方法 A Fallback：Canvas 點陣（SCALE=4 / 288 DPI + PNG 無損）──
+        console.warn('pdf-lib 向量輸出失敗，切換高解析度點陣模式', vecErr);
+        showStatus(`切換高解析模式（${numPages} 頁）…`, 'info');
 
-        const page = await pdfDoc.getPage(i);
-        const viewport = page.getViewport({ scale: SCALE });
+        const { jsPDF } = window.jspdf;
+        let pdf = null;
+        const SCALE = 4.0; // 288 DPI
 
-        const canvas = document.createElement('canvas');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        const ctx = canvas.getContext('2d');
+        for (let i = 1; i <= numPages; i++) {
+          setProgress(20 + Math.round((i / numPages) * 75));
+          showStatus(`高解析轉換中… ${i} / ${numPages} 頁`, 'info');
 
-        await page.render({ canvasContext: ctx, viewport }).promise;
+          const page = await pdfDoc.getPage(i);
+          const viewport = page.getViewport({ scale: SCALE });
 
-        const imgData = canvas.toDataURL('image/jpeg', 0.92);
+          const canvas = document.createElement('canvas');
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          const ctx = canvas.getContext('2d');
+          await page.render({ canvasContext: ctx, viewport }).promise;
 
-        // PDF 頁面尺寸（pt）— PDF.js scale=1 單位即為 pt，直接除回即可
-        const ptW = viewport.width / SCALE;
-        const ptH = viewport.height / SCALE;
+          const imgData = canvas.toDataURL('image/png'); // 無損
+          const ptW = viewport.width / SCALE;
+          const ptH = viewport.height / SCALE;
 
-        if (i === 1) {
-          pdf = new jsPDF({
-            orientation: ptW > ptH ? 'landscape' : 'portrait',
-            unit: 'pt',
-            format: [ptW, ptH],
-          });
-        } else {
-          pdf.addPage([ptW, ptH], ptW > ptH ? 'landscape' : 'portrait');
+          if (i === 1) {
+            pdf = new jsPDF({
+              orientation: ptW > ptH ? 'landscape' : 'portrait',
+              unit: 'pt',
+              format: [ptW, ptH],
+            });
+          } else {
+            pdf.addPage([ptW, ptH], ptW > ptH ? 'landscape' : 'portrait');
+          }
+          pdf.addImage(imgData, 'PNG', 0, 0, ptW, ptH);
         }
 
-        pdf.addImage(imgData, 'JPEG', 0, 0, ptW, ptH);
+        outputBytes = pdf.output('arraybuffer');
+        setProgress(95);
       }
 
       setProgress(100);
 
-      // Open print dialog
-      const blobUrl = pdf.output('bloburl');
+      // 開啟列印視窗
+      const blob = new Blob([outputBytes], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
       const printWin = window.open(blobUrl);
       if (printWin) {
         printWin.onload = () => {
