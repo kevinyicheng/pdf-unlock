@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PDF 解鎖列印工具</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#d0021b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PDF解鎖">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -318,6 +324,32 @@
       convertBtn.disabled = false;
     }
   });
+
+  // ── PWA Service Worker ──────────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/pdf-unlock/sw.js');
+  }
+
+  // ── 處理 Web Share Target 分享進來的 PDF ────────────────────
+  if (location.search.includes('shared=1')) {
+    // 清掉 URL 上的 query string，避免重整後重複觸發
+    history.replaceState({}, '', location.pathname);
+
+    showStatus('正在載入分享的 PDF…', 'info');
+
+    fetch('?get-shared-file').then(async res => {
+      if (res.status === 204) {
+        showStatus('未收到檔案，請重新分享', 'error');
+        return;
+      }
+      const blob = await res.blob();
+      const name = decodeURIComponent(res.headers.get('X-File-Name') || 'shared.pdf');
+      const file = new File([blob], name, { type: 'application/pdf' });
+      setFile(file);
+      showStatus('PDF 已載入，請輸入密碼後按「轉換並列印」', 'info');
+      passwordEl.focus();
+    }).catch(() => showStatus('載入失敗，請手動選擇檔案', 'error'));
+  }
 </script>
 </body>
 </html>

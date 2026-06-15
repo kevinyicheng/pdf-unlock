@@ -1,0 +1,28 @@
+{
+  "name": "PDF 解鎖列印工具",
+  "short_name": "PDF解鎖",
+  "description": "解除 PDF 加密限制，直接列印",
+  "start_url": "/pdf-unlock/",
+  "scope": "/pdf-unlock/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#d0021b",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "share_target": {
+    "action": "/pdf-unlock/",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [
+        {
+          "name": "file",
+          "accept": ["application/pdf", ".pdf"]
+        }
+      ]
+    }
+  }
+}
