@@ -73,8 +73,8 @@ const dz = $('dz'), fi = $('fi'), fn = $('fn'), pw = $('pw'),
       btn = $('btn'), st = $('st'), bar = $('bar'), fill = $('fill');
 let file = null;
 
-// A4 標準尺寸（pt）
-const A4W = 595.28, A4H = 841.89;
+// A4 標準尺寸（pt）+ 列印安全內縮 3%（避免印表機裁邊）
+const A4W = 595.28, A4H = 841.89, MARGIN = 0.97;
 
 function setFile(f) { file = f; fn.textContent = '✅ ' + f.name; fn.classList.add('show'); btn.disabled = false; }
 function status(msg, cls) { st.textContent = msg; st.className = 'st show ' + cls; }
@@ -112,13 +112,11 @@ async function vectorUnlock(buf, password) {
     const { width: w, height: h } = p.getSize();
     const portrait = h >= w;
     const [tw, th] = portrait ? [A4W, A4H] : [A4H, A4W];
-    const scale = Math.min(tw / w, th / h);
-    if (scale < 0.99) {
-      // 頁面大於 A4，縮放內容並置中
-      p.setSize(tw, th);
-      p.scaleContent(scale, scale);
-      p.translateContent((tw - w * scale) / 2, (th - h * scale) / 2);
-    }
+    const scale = Math.min(tw / w, th / h) * MARGIN;
+    // 統一縮放至 A4 並置中（含列印安全邊距）
+    p.setSize(tw, th);
+    p.scaleContent(scale, scale);
+    p.translateContent((tw - w * scale) / 2, (th - h * scale) / 2);
     doc.addPage(p);
   });
   return await doc.save();
@@ -145,7 +143,7 @@ async function rasterUnlock(pdfDoc, numPages) {
     const srcW = vp.width / SCALE, srcH = vp.height / SCALE;
     const portrait = srcH >= srcW;
     const [tw, th] = portrait ? [A4W, A4H] : [A4H, A4W];
-    const s = Math.min(tw / srcW, th / srcH, 1); // 不放大，只縮小
+    const s = Math.min(tw / srcW, th / srcH, 1) * MARGIN; // 含列印安全邊距
     const imgW = srcW * s, imgH = srcH * s;
     const ox = (tw - imgW) / 2, oy = (th - imgH) / 2;
 
