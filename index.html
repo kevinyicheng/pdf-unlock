@@ -6,375 +6,217 @@
 <title>PDF 解鎖列印工具</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#d0021b">
-<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PDF解鎖">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: #f0f2f5;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-  .card {
-    background: white;
-    border-radius: 16px;
-    padding: 40px;
-    width: 100%;
-    max-width: 480px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-  }
-  .logo {
-    font-size: 32px;
-    margin-bottom: 8px;
-  }
-  h1 {
-    font-size: 22px;
-    font-weight: 700;
-    color: #1a1a1a;
-    margin-bottom: 4px;
-  }
-  .subtitle {
-    font-size: 14px;
-    color: #888;
-    margin-bottom: 32px;
-  }
-  .drop-zone {
-    border: 2px dashed #d0d5dd;
-    border-radius: 12px;
-    padding: 32px 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-bottom: 20px;
-    background: #fafafa;
-  }
-  .drop-zone:hover, .drop-zone.drag-over {
-    border-color: #d0021b;
-    background: #fff5f5;
-  }
-  .drop-zone .icon { font-size: 36px; margin-bottom: 8px; }
-  .drop-zone .text { font-size: 15px; color: #555; }
-  .drop-zone .hint { font-size: 13px; color: #aaa; margin-top: 4px; }
-  .file-name {
-    display: none;
-    background: #f0fff4;
-    border: 1px solid #86efac;
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 14px;
-    color: #166534;
-    margin-bottom: 20px;
-    word-break: break-all;
-  }
-  .file-name.show { display: block; }
-  label {
-    display: block;
-    font-size: 14px;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 8px;
-  }
-  input[type="password"] {
-    width: 100%;
-    padding: 11px 14px;
-    border: 1.5px solid #d1d5db;
-    border-radius: 8px;
-    font-size: 15px;
-    outline: none;
-    transition: border-color 0.2s;
-    margin-bottom: 24px;
-  }
-  input[type="password"]:focus {
-    border-color: #d0021b;
-  }
-  button {
-    width: 100%;
-    padding: 13px;
-    background: #d0021b;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  button:hover { background: #b00016; }
-  button:disabled { background: #ccc; cursor: not-allowed; }
-  .status {
-    margin-top: 20px;
-    padding: 12px 16px;
-    border-radius: 8px;
-    font-size: 14px;
-    display: none;
-  }
-  .status.show { display: block; }
-  .status.info { background: #eff6ff; color: #1d4ed8; }
-  .status.error { background: #fef2f2; color: #dc2626; }
-  .status.success { background: #f0fdf4; color: #16a34a; }
-  .progress-bar {
-    width: 100%;
-    height: 6px;
-    background: #e5e7eb;
-    border-radius: 99px;
-    margin-top: 12px;
-    overflow: hidden;
-    display: none;
-  }
-  .progress-bar.show { display: block; }
-  .progress-fill {
-    height: 100%;
-    background: #d0021b;
-    border-radius: 99px;
-    transition: width 0.3s;
-    width: 0%;
-  }
-  .footer {
-    margin-top: 28px;
-    text-align: center;
-    font-size: 12px;
-    color: #bbb;
-  }
-  #fileInput { display: none; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f0f2f5;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:#fff;border-radius:16px;padding:40px;width:100%;max-width:480px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.logo{font-size:32px;margin-bottom:8px}
+h1{font-size:22px;font-weight:700;color:#1a1a1a;margin-bottom:4px}
+.sub{font-size:14px;color:#888;margin-bottom:32px}
+.drop{border:2px dashed #d0d5dd;border-radius:12px;padding:32px 24px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:20px;background:#fafafa}
+.drop:hover,.drop.over{border-color:#d0021b;background:#fff5f5}
+.drop .ic{font-size:36px;margin-bottom:8px}
+.drop .tx{font-size:15px;color:#555}
+.drop .ht{font-size:13px;color:#aaa;margin-top:4px}
+.fname{display:none;background:#f0fff4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;font-size:14px;color:#166534;margin-bottom:20px;word-break:break-all}
+.fname.show{display:block}
+label{display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:8px}
+input[type=password]{width:100%;padding:11px 14px;border:1.5px solid #d1d5db;border-radius:8px;font-size:15px;outline:none;transition:border-color .2s;margin-bottom:24px}
+input[type=password]:focus{border-color:#d0021b}
+button{width:100%;padding:13px;background:#d0021b;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;transition:background .2s}
+button:hover{background:#b00016}
+button:disabled{background:#ccc;cursor:not-allowed}
+.st{margin-top:20px;padding:12px 16px;border-radius:8px;font-size:14px;display:none}
+.st.show{display:block}
+.st.info{background:#eff6ff;color:#1d4ed8}
+.st.err{background:#fef2f2;color:#dc2626}
+.st.ok{background:#f0fdf4;color:#16a34a}
+.bar{width:100%;height:6px;background:#e5e7eb;border-radius:99px;margin-top:12px;overflow:hidden;display:none}
+.bar.show{display:block}
+.fill{height:100%;background:#d0021b;border-radius:99px;transition:width .3s;width:0}
+.foot{margin-top:28px;text-align:center;font-size:12px;color:#bbb}
+#fi{display:none}
 </style>
 </head>
 <body>
-
 <div class="card">
   <div class="logo">🔓</div>
   <h1>PDF 解鎖列印工具</h1>
-  <p class="subtitle">輸入密碼，解除加密限制，輸出可列印 PDF</p>
-
-  <div class="drop-zone" id="dropZone">
-    <div class="icon">📄</div>
-    <div class="text">點擊選擇 PDF，或拖曳至此</div>
-    <div class="hint">支援 AES-256 加密的 PDF</div>
+  <p class="sub">輸入密碼，解除加密限制，輸出可列印 PDF</p>
+  <div class="drop" id="dz">
+    <div class="ic">📄</div>
+    <div class="tx">點擊選擇 PDF，或拖曳至此</div>
+    <div class="ht">支援 AES-256 加密的 PDF</div>
   </div>
-  <input type="file" id="fileInput" accept=".pdf">
-
-  <div class="file-name" id="fileName"></div>
-
-  <label for="password">PDF 密碼</label>
-  <input type="password" id="password" placeholder="輸入開啟密碼">
-
-  <button id="convertBtn" disabled>轉換並列印</button>
-
-  <div class="status" id="status"></div>
-  <div class="progress-bar" id="progressBar">
-    <div class="progress-fill" id="progressFill"></div>
-  </div>
-
-  <div class="footer">全程在瀏覽器處理，檔案不會上傳至任何伺服器</div>
+  <input type="file" id="fi" accept=".pdf">
+  <div class="fname" id="fn"></div>
+  <label for="pw">PDF 密碼</label>
+  <input type="password" id="pw" placeholder="輸入開啟密碼">
+  <button id="btn" disabled>轉換並列印</button>
+  <div class="st" id="st"></div>
+  <div class="bar" id="bar"><div class="fill" id="fill"></div></div>
+  <div class="foot">全程在瀏覽器處理，檔案不會上傳至任何伺服器</div>
 </div>
 
-<!-- PDF.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<!-- pdf-lib（向量輸出，方法 B） -->
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-<!-- jsPDF（fallback 點陣，方法 A） -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <script>
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-  let selectedFile = null;
+const $ = id => document.getElementById(id);
+const dz = $('dz'), fi = $('fi'), fn = $('fn'), pw = $('pw'),
+      btn = $('btn'), st = $('st'), bar = $('bar'), fill = $('fill');
+let file = null;
 
-  const dropZone = document.getElementById('dropZone');
-  const fileInput = document.getElementById('fileInput');
-  const fileNameEl = document.getElementById('fileName');
-  const passwordEl = document.getElementById('password');
-  const convertBtn = document.getElementById('convertBtn');
-  const statusEl = document.getElementById('status');
-  const progressBar = document.getElementById('progressBar');
-  const progressFill = document.getElementById('progressFill');
+// A4 標準尺寸（pt）
+const A4W = 595.28, A4H = 841.89;
 
-  dropZone.addEventListener('click', () => fileInput.click());
+function setFile(f) { file = f; fn.textContent = '✅ ' + f.name; fn.classList.add('show'); btn.disabled = false; }
+function status(msg, cls) { st.textContent = msg; st.className = 'st show ' + cls; }
+function progress(p) { bar.classList.add('show'); fill.style.width = p + '%'; }
 
-  dropZone.addEventListener('dragover', e => {
-    e.preventDefault();
-    dropZone.classList.add('drag-over');
-  });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-  dropZone.addEventListener('drop', e => {
-    e.preventDefault();
-    dropZone.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file && file.type === 'application/pdf') setFile(file);
-    else showStatus('請選擇 PDF 檔案', 'error');
-  });
+// ── 檔案選取 / 拖曳 ──
+dz.onclick = () => fi.click();
+dz.ondragover = e => { e.preventDefault(); dz.classList.add('over'); };
+dz.ondragleave = () => dz.classList.remove('over');
+dz.ondrop = e => {
+  e.preventDefault(); dz.classList.remove('over');
+  const f = e.dataTransfer.files[0];
+  f && f.type === 'application/pdf' ? setFile(f) : status('請選擇 PDF 檔案', 'err');
+};
+fi.onchange = () => fi.files[0] && setFile(fi.files[0]);
 
-  fileInput.addEventListener('change', e => {
-    if (e.target.files[0]) setFile(e.target.files[0]);
-  });
+// ── 開啟列印視窗（用 iframe 確保尺寸正確）──
+function openPrint(bytes) {
+  const blob = new Blob([bytes], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const w = window.open(url);
+  if (!w) { status('瀏覽器封鎖了彈出視窗，請允許後再試', 'err'); return false; }
+  w.onload = () => { w.focus(); w.print(); };
+  return true;
+}
 
-  function setFile(file) {
-    selectedFile = file;
-    fileNameEl.textContent = '✅ ' + file.name;
-    fileNameEl.classList.add('show');
-    convertBtn.disabled = false;
-  }
-
-  function showStatus(msg, type) {
-    statusEl.textContent = msg;
-    statusEl.className = 'status show ' + type;
-  }
-
-  function setProgress(pct) {
-    progressBar.classList.add('show');
-    progressFill.style.width = pct + '%';
-  }
-
-  convertBtn.addEventListener('click', async () => {
-    if (!selectedFile) return;
-
-    const password = passwordEl.value;
-    convertBtn.disabled = true;
-    showStatus('正在開啟 PDF，驗證密碼中…', 'info');
-    setProgress(5);
-
-    try {
-      const arrayBuffer = await selectedFile.arrayBuffer();
-
-      // Open PDF with password
-      const loadingTask = pdfjsLib.getDocument({
-        data: arrayBuffer,
-        password: password,
-      });
-
-      let pdfDoc;
-      try {
-        pdfDoc = await loadingTask.promise;
-      } catch (err) {
-        if (err.name === 'PasswordException') {
-          showStatus('密碼錯誤，請確認後再試', 'error');
-          convertBtn.disabled = false;
-          progressBar.classList.remove('show');
-          return;
-        }
-        throw err;
-      }
-
-      const numPages = pdfDoc.numPages;
-      showStatus(`共 ${numPages} 頁，開始轉換…`, 'info');
-      setProgress(20);
-
-      let outputBytes = null;
-
-      // ── 方法 B：pdf-lib 向量輸出（保留字型與圖形，品質最佳）──────────
-      try {
-        const { PDFDocument } = PDFLib;
-        const srcDoc = await PDFDocument.load(arrayBuffer, {
-          password,
-          ignoreEncryption: false,
-        });
-        const newDoc = await PDFDocument.create();
-        const indices = srcDoc.getPageIndices();
-        const copied = await newDoc.copyPages(srcDoc, indices);
-        copied.forEach(p => newDoc.addPage(p));
-        outputBytes = await newDoc.save();
-        setProgress(95);
-        showStatus('向量模式轉換完成，開啟列印…', 'info');
-      } catch (vecErr) {
-        // ── 方法 A Fallback：Canvas 點陣（SCALE=4 / 288 DPI + PNG 無損）──
-        console.warn('pdf-lib 向量輸出失敗，切換高解析度點陣模式', vecErr);
-        showStatus(`切換高解析模式（${numPages} 頁）…`, 'info');
-
-        const { jsPDF } = window.jspdf;
-        let pdf = null;
-        const SCALE = 4.0; // 288 DPI
-
-        for (let i = 1; i <= numPages; i++) {
-          setProgress(20 + Math.round((i / numPages) * 75));
-          showStatus(`高解析轉換中… ${i} / ${numPages} 頁`, 'info');
-
-          const page = await pdfDoc.getPage(i);
-          const viewport = page.getViewport({ scale: SCALE });
-
-          const canvas = document.createElement('canvas');
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-          const ctx = canvas.getContext('2d');
-          await page.render({ canvasContext: ctx, viewport }).promise;
-
-          const imgData = canvas.toDataURL('image/png'); // 無損
-          const ptW = viewport.width / SCALE;
-          const ptH = viewport.height / SCALE;
-
-          if (i === 1) {
-            pdf = new jsPDF({
-              orientation: ptW > ptH ? 'landscape' : 'portrait',
-              unit: 'pt',
-              format: [ptW, ptH],
-            });
-          } else {
-            pdf.addPage([ptW, ptH], ptW > ptH ? 'landscape' : 'portrait');
-          }
-          pdf.addImage(imgData, 'PNG', 0, 0, ptW, ptH);
-        }
-
-        outputBytes = pdf.output('arraybuffer');
-        setProgress(95);
-      }
-
-      setProgress(100);
-
-      // 開啟列印視窗
-      const blob = new Blob([outputBytes], { type: 'application/pdf' });
-      const blobUrl = URL.createObjectURL(blob);
-      const printWin = window.open(blobUrl);
-      if (printWin) {
-        printWin.onload = () => {
-          printWin.focus();
-          printWin.print();
-        };
-      } else {
-        showStatus('瀏覽器封鎖了彈出視窗，請允許後再試一次', 'error');
-        convertBtn.disabled = false;
-        return;
-      }
-
-      showStatus(`完成！共 ${numPages} 頁，列印視窗已開啟`, 'success');
-
-    } catch (err) {
-      console.error(err);
-      showStatus('轉換失敗：' + err.message, 'error');
-    } finally {
-      convertBtn.disabled = false;
+// ── 方法 B：pdf-lib 向量輸出（品質最佳）──
+async function vectorUnlock(buf, password) {
+  const { PDFDocument } = PDFLib;
+  const src = await PDFDocument.load(buf, { password, ignoreEncryption: false });
+  const doc = await PDFDocument.create();
+  const pages = await doc.copyPages(src, src.getPageIndices());
+  pages.forEach(p => {
+    // 取得原始尺寸，縮放至 A4 避免裁切
+    const { width: w, height: h } = p.getSize();
+    const portrait = h >= w;
+    const [tw, th] = portrait ? [A4W, A4H] : [A4H, A4W];
+    const scale = Math.min(tw / w, th / h);
+    if (scale < 0.99) {
+      // 頁面大於 A4，縮放內容並置中
+      p.setSize(tw, th);
+      p.scaleContent(scale, scale);
+      p.translateContent((tw - w * scale) / 2, (th - h * scale) / 2);
     }
+    doc.addPage(p);
   });
+  return await doc.save();
+}
 
-  // ── PWA Service Worker ──────────────────────────────────────
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/pdf-unlock/sw.js');
+// ── 方法 A Fallback：Canvas 高解析點陣（288 DPI + PNG）──
+async function rasterUnlock(pdfDoc, numPages) {
+  const { jsPDF } = window.jspdf;
+  let pdf = null;
+  const SCALE = 4; // 288 DPI
+
+  for (let i = 1; i <= numPages; i++) {
+    progress(20 + Math.round((i / numPages) * 75));
+    status(`高解析轉換中… ${i} / ${numPages} 頁`, 'info');
+
+    const page = await pdfDoc.getPage(i);
+    const vp = page.getViewport({ scale: SCALE });
+    const canvas = document.createElement('canvas');
+    canvas.width = vp.width; canvas.height = vp.height;
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+
+    const img = canvas.toDataURL('image/png');
+    // 原始尺寸（pt），縮放至 A4
+    const srcW = vp.width / SCALE, srcH = vp.height / SCALE;
+    const portrait = srcH >= srcW;
+    const [tw, th] = portrait ? [A4W, A4H] : [A4H, A4W];
+    const s = Math.min(tw / srcW, th / srcH, 1); // 不放大，只縮小
+    const imgW = srcW * s, imgH = srcH * s;
+    const ox = (tw - imgW) / 2, oy = (th - imgH) / 2;
+
+    if (i === 1) pdf = new jsPDF({ orientation: portrait ? 'portrait' : 'landscape', unit: 'pt', format: [tw, th] });
+    else pdf.addPage([tw, th], portrait ? 'portrait' : 'landscape');
+    pdf.addImage(img, 'PNG', ox, oy, imgW, imgH);
   }
+  return new Uint8Array(pdf.output('arraybuffer'));
+}
 
-  // ── 處理 Web Share Target 分享進來的 PDF ────────────────────
-  if (location.search.includes('shared=1')) {
-    // 清掉 URL 上的 query string，避免重整後重複觸發
-    history.replaceState({}, '', location.pathname);
+// ── 主流程 ──
+btn.onclick = async () => {
+  if (!file) return;
+  btn.disabled = true;
+  status('驗證密碼中…', 'info');
+  progress(5);
 
-    showStatus('正在載入分享的 PDF…', 'info');
+  try {
+    const buf = await file.arrayBuffer();
 
-    fetch('?get-shared-file').then(async res => {
-      if (res.status === 204) {
-        showStatus('未收到檔案，請重新分享', 'error');
-        return;
-      }
-      const blob = await res.blob();
-      const name = decodeURIComponent(res.headers.get('X-File-Name') || 'shared.pdf');
-      const file = new File([blob], name, { type: 'application/pdf' });
-      setFile(file);
-      showStatus('PDF 已載入，請輸入密碼後按「轉換並列印」', 'info');
-      passwordEl.focus();
-    }).catch(() => showStatus('載入失敗，請手動選擇檔案', 'error'));
+    // 先用 PDF.js 驗證密碼
+    let pdfDoc;
+    try {
+      pdfDoc = await pdfjsLib.getDocument({ data: buf, password: pw.value }).promise;
+    } catch (e) {
+      if (e.name === 'PasswordException') { status('密碼錯誤，請確認後再試', 'err'); bar.classList.remove('show'); btn.disabled = false; return; }
+      throw e;
+    }
+
+    const n = pdfDoc.numPages;
+    status(`共 ${n} 頁，轉換中…`, 'info');
+    progress(20);
+
+    let out;
+    try {
+      out = await vectorUnlock(buf, pw.value);
+      progress(95);
+      status('向量轉換完成，開啟列印…', 'info');
+    } catch (e) {
+      console.warn('向量模式失敗，切換高解析點陣', e);
+      status(`切換高解析模式…`, 'info');
+      out = await rasterUnlock(pdfDoc, n);
+      progress(95);
+    }
+
+    progress(100);
+    if (openPrint(out)) status(`完成！共 ${n} 頁，列印視窗已開啟`, 'ok');
+  } catch (e) {
+    console.error(e);
+    status('轉換失敗：' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
   }
+};
+
+// ── PWA ──
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/pdf-unlock/sw.js');
+
+// ── Web Share Target ──
+if (location.search.includes('shared=1')) {
+  history.replaceState({}, '', location.pathname);
+  status('正在載入分享的 PDF…', 'info');
+  fetch('?get-shared-file').then(async r => {
+    if (r.status === 204) { status('未收到檔案，請重新分享', 'err'); return; }
+    const b = await r.blob();
+    const name = decodeURIComponent(r.headers.get('X-File-Name') || 'shared.pdf');
+    setFile(new File([b], name, { type: 'application/pdf' }));
+    status('PDF 已載入，請輸入密碼', 'info');
+    pw.focus();
+  }).catch(() => status('載入失敗，請手動選擇檔案', 'err'));
+}
 </script>
 </body>
 </html>
