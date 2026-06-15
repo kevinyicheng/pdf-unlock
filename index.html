@@ -276,9 +276,9 @@
 
         const imgData = canvas.toDataURL('image/jpeg', 0.92);
 
-        // PDF 頁面尺寸（pt）
-        const ptW = viewport.width / SCALE * 72 / 96;
-        const ptH = viewport.height / SCALE * 72 / 96;
+        // PDF 頁面尺寸（pt）— PDF.js scale=1 單位即為 pt，直接除回即可
+        const ptW = viewport.width / SCALE;
+        const ptH = viewport.height / SCALE;
 
         if (i === 1) {
           pdf = new jsPDF({
