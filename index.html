@@ -42,6 +42,39 @@ button:disabled{background:#ccc;cursor:not-allowed}
 </style>
 </head>
 <body>
+
+<!-- Kevin Supply Hub Back Button -->
+<style>
+.ks-back {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px 5px 5px;
+  background: rgba(255,255,255,0.88);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0,0,0,0.09);
+  border-radius: 99px;
+  text-decoration: none;
+  color: #111;
+  font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+  transition: transform 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+}
+.ks-back:hover { transform: translateY(-1px); box-shadow: 0 4px 18px rgba(0,0,0,0.15); }
+.ks-back img { width: 26px; height: 26px; border-radius: 50%; display: block; }
+</style>
+<a class="ks-back" href="https://kevinyicheng.github.io/kevin-supply-hub/">
+  <img src="https://kevinyicheng.github.io/kevin-supply-hub/apple-touch-icon.png" alt="Kevin" />
+  Kevin Supply Hub
+</a>
 <div class="card">
   <div class="logo">🔓</div>
   <h1>PDF 解鎖列印工具</h1>
